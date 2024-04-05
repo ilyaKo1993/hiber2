@@ -7,6 +7,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
+import javax.persistence.TypedQuery;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -93,33 +94,17 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public List<User> getAllUsers() {
-        Transaction transaction = null;
-        List<User> users = null;
-        try (Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-            String sql = "SELECT * FROM users";
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
-            users = query.list();
-            transaction.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return users;
+        TypedQuery<User> query = sessionFactory.openSession().createQuery("from User");
+        return query.getResultList();
     }
 
     @Override
     public void cleanUsersTable() {
-        Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
-            String sql = "TRUNCATE TABLE USERS";
-            Query query = session.createSQLQuery(sql).addEntity(User.class);
-            query.executeUpdate();
-            transaction.commit();
+            session.beginTransaction();
+            session.createQuery("delete from User").executeUpdate();
+            session.getTransaction().commit();
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
             e.printStackTrace();
         }
     }
